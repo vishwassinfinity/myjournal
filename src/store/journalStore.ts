@@ -1,6 +1,11 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+export type MoodType = {
+  emoji: string;
+  label: string;
+};
+
 export interface JournalEntry {
   id: string;
   date: string;
@@ -8,14 +13,16 @@ export interface JournalEntry {
   lastModified: number;
   shared: boolean;
   sharedWith: string[];
+  mood?: MoodType;
 }
 
 interface JournalState {
   entries: JournalEntry[];
   addEntry: (entry: Omit<JournalEntry, 'id' | 'lastModified'>) => void;
-  updateEntry: (id: string, content: string) => void;
+  updateEntry: (id: string, content: string, additionalProps?: Partial<JournalEntry>) => void;
   getEntryByDate: (date: string) => JournalEntry | undefined;
   deleteEntry: (id: string) => void;
+  setMood: (id: string, mood: MoodType) => void;
   shareEntry: (id: string, email: string) => void;
   unshareEntry: (id: string, email: string) => void;
   toggleShareStatus: (id: string) => void;
@@ -41,11 +48,11 @@ export const useJournalStore = create<JournalState>()(
         }));
       },
       
-      updateEntry: (id, content) => {
+      updateEntry: (id, content, additionalProps = {}) => {
         set((state) => ({
           entries: state.entries.map((entry) =>
             entry.id === id
-              ? { ...entry, content, lastModified: Date.now() }
+              ? { ...entry, content, lastModified: Date.now(), ...additionalProps }
               : entry
           ),
         }));
@@ -58,6 +65,16 @@ export const useJournalStore = create<JournalState>()(
       deleteEntry: (id) => {
         set((state) => ({
           entries: state.entries.filter((entry) => entry.id !== id),
+        }));
+      },
+      
+      setMood: (id, mood) => {
+        set((state) => ({
+          entries: state.entries.map((entry) =>
+            entry.id === id
+              ? { ...entry, mood, lastModified: Date.now() }
+              : entry
+          ),
         }));
       },
       
