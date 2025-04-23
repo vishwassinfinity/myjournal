@@ -1,26 +1,133 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --foreground-rgb: 51, 51, 51;
+  --background-start-rgb: 248, 249, 250;
+  --background-end-rgb: 255, 255, 255;
+  --card-bg: 255, 255, 255;
+  --muted-color: 107, 114, 128;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.dark {
+  --foreground-rgb: 225, 231, 239;
+  --background-start-rgb: 18, 25, 39;
+  --background-end-rgb: 30, 41, 59;
+  --card-bg: 30, 41, 59;
+  --muted-color: 148, 163, 184;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-start-rgb));
+  min-height: 100vh;
+}
+
+.journal-container {
+  max-width: 56rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 1rem;
+}
+
+.calendar-container {
+  background-color: rgb(var(--card-bg));
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.journal-entry {
+  background-color: rgb(var(--card-bg));
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  padding: 1.5rem;
+}
+
+.sound-button {
+  background-color: rgb(var(--card-bg));
+  border-radius: 0.375rem;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.sound-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.sound-button.active {
+  background-color: #4B6BFB;
+  color: white;
+}
+
+.audio-slider {
+  width: 100%;
+  height: 6px;
+  -webkit-appearance: none;
+  background: #e2e8f0;
+  border-radius: 5px;
+  outline: none;
+}
+
+.dark .audio-slider {
+  background: #334155;
+}
+
+.audio-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #4B6BFB;
+  cursor: pointer;
+}
+
+.audio-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #4B6BFB;
+  cursor: pointer;
+  border: none;
+}
+
+/* Calendar styles */
+.react-calendar {
+  border: none !important;
+  width: 100% !important;
+  background-color: transparent !important;
+  color: rgb(var(--foreground-rgb)) !important;
+}
+
+.react-calendar__tile {
+  padding: 0.75rem 0.5rem !important;
+  color: rgb(var(--foreground-rgb)) !important;
+}
+
+.react-calendar__tile--active {
+  background-color: #4B6BFB !important;
+  color: white !important;
+}
+
+.react-calendar__tile--now {
+  background-color: rgba(var(--foreground-rgb), 0.1) !important;
+}
+
+.react-calendar__month-view__weekdays {
+  text-transform: uppercase !important;
+  font-weight: 600 !important;
+  font-size: 0.75rem !important;
+  color: rgb(var(--muted-color)) !important;
+}
+
+.react-calendar__navigation button {
+  color: rgb(var(--foreground-rgb)) !important;
 }
