@@ -1,14 +1,10 @@
 import React, { useState } from 'react';
 import { useJournalStore } from '@/store/journalStore';
 import { useNetworkStore } from '@/store/networkStore';
-import { formatDisplayDate, copyToClipboard, generateShareLink } from '@/lib/utils';
-import { FiShare2, FiCheck, FiX, FiCopy } from 'react-icons/fi';
 
 const ShareEntries: React.FC = () => {
   const entries = useJournalStore((state) => state.entries);
   const shareEntry = useJournalStore((state) => state.shareEntry);
-  const unshareEntry = useJournalStore((state) => state.unshareEntry);
-  const toggleShareStatus = useJournalStore((state) => state.toggleShareStatus);
   const { isOnline, isWorkingOffline } = useNetworkStore();
   
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
@@ -58,7 +54,7 @@ const ShareEntries: React.FC = () => {
         } else {
           setShareError('Entry not found');
         }
-      } catch (error) {
+      } catch {
         setShareError('Failed to share the entry. Please try again.');
       } finally {
         setIsSharing(false);
@@ -67,48 +63,30 @@ const ShareEntries: React.FC = () => {
   };
   
   const isDisabled = !isOnline || isWorkingOffline;
-  const selectedEntry = entries.find(e => e.id === selectedEntryId);
-  
-  const containerStyle = {
-    backgroundColor: 'rgb(var(--card-bg))',
-    borderRadius: '0.5rem',
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-    padding: '1rem',
-    marginBottom: '1.5rem',
-    opacity: isDisabled ? 0.6 : 1
-  };
-  
-  const headingStyle = {
-    fontSize: '1.25rem',
-    fontWeight: '600',
-    marginBottom: '1rem',
-    color: 'rgb(var(--foreground-rgb))'
-  };
-  
-  if (isDisabled) {
-    return (
-      <div style={containerStyle}>
-        <h2 style={headingStyle}>Share Your Journal</h2>
-        <p style={{ color: 'rgb(var(--muted-color))' }}>
-          Sharing is disabled in offline mode. Please connect to the internet to share your journal.
-        </p>
-      </div>
-    );
-  }
   
   return (
-    <div className="space-y-6">
+    <div className={`space-y-6 ${isDisabled ? 'opacity-60 pointer-events-none' : ''}`}>
       <h2 className="text-2xl font-bold text-journal-text-light dark:text-journal-text-dark">
-        Share Your Journal
+        Share Your Scripts
       </h2>
       
-      {entriesWithContent.length === 0 ? (
+      {isDisabled && (
         <div className="p-6 bg-gray-100 dark:bg-gray-800 rounded-xl text-center">
           <p className="text-journal-muted-light dark:text-journal-muted-dark">
-            Write some journal entries first to share them
+            Sharing is disabled in offline mode. Please connect to the internet to share your scripts.
           </p>
         </div>
-      ) : (
+      )}
+      
+      {!isDisabled && entriesWithContent.length === 0 && (
+        <div className="p-6 bg-gray-100 dark:bg-gray-800 rounded-xl text-center">
+          <p className="text-journal-muted-light dark:text-journal-muted-dark">
+            Write some scripts first to share them
+          </p>
+        </div>
+      )}
+      
+      {!isDisabled && entriesWithContent.length > 0 && (
         <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-6 shadow-inner">
           <form onSubmit={handleShareSubmit} className="space-y-5">
             <div>
@@ -190,14 +168,14 @@ const ShareEntries: React.FC = () => {
         </div>
       )}
       
-      {selectedEntryId && entries.find(e => e.id === selectedEntryId)?.sharedWith?.length > 0 && (
+      {selectedEntryId && entries.find(e => e.id === selectedEntryId)?.sharedWith && entries.find(e => e.id === selectedEntryId)!.sharedWith!.length > 0 && (
         <div className="mt-4">
           <h3 className="text-lg font-medium text-journal-text-light dark:text-journal-text-dark mb-3">
             Already Shared With:
           </h3>
           <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
             <ul className="space-y-2">
-              {entries.find(e => e.id === selectedEntryId)?.sharedWith?.map((email, idx) => (
+              {entries.find(e => e.id === selectedEntryId)!.sharedWith!.map((email, idx) => (
                 <li key={idx} className="flex items-center gap-2 text-journal-text-light dark:text-journal-text-dark">
                   <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />

@@ -43,7 +43,7 @@ export default function SharedEntryPage({ params }: { params: { entryId: string 
         <div style={{ maxWidth: '48rem', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div className="flex items-center space-x-2">
             <FiBook className="text-journal-primary" size={24} />
-            <h1 className="text-2xl font-bold">MyJournal</h1>
+            <h1 className="text-2xl font-bold">Soul Scripts</h1>
           </div>
           <Link 
             href="/"

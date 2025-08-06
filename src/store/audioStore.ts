@@ -23,10 +23,8 @@ const LIGHT_RAIN_SOUND = '/sounds/LightRain.mp3';
 const RAIN_SOUND = '/sounds/Rain.mp3';
 const FOREST_AMBIENCE_SOUND = '/sounds/ForestAmbience.mp3';
 const CAFE_CHATTER_SOUND = '/sounds/CafeChatter.mp3';
-const FIRE_SOUND = '/sounds/fire.mp3'; 
 const WAVES_SOUND = '/sounds/Waves.mp3';
 const RIVER_SOUND = '/sounds/River.mp3';
-const FAN_SOUND = '/sounds/fan.mp3';
 const NIGHT_AMBIENCE_SOUND = '/sounds/NightAmbience.mp3';
 const THUNDERSTORM_SOUND = '/sounds/thunderstorm.mp3';
 const WHITE_NOISE_SOUND = '/sounds/WhiteNoise.mp3';
@@ -60,12 +58,6 @@ export const sounds: Sound[] = [
     icon: 'coffee',
   },
   {
-    id: 'fire',
-    name: 'Crackling Fire',
-    src: FIRE_SOUND,
-    icon: 'flame',
-  },
-  {
     id: 'waves',
     name: 'Ocean Waves',
     src: WAVES_SOUND,
@@ -76,12 +68,6 @@ export const sounds: Sound[] = [
     name: 'Flowing River',
     src: RIVER_SOUND,
     icon: 'droplet',
-  },
-  {
-    id: 'fan',
-    name: 'Fan Sound',
-    src: FAN_SOUND,
-    icon: 'wind',
   },
   {
     id: 'nightAmbience',

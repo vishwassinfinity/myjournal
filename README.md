@@ -1,13 +1,13 @@
-# MyJournal - Personal Journal App
+# Soul Scripts - Personal Writing Companion
 
-A beautiful and feature-rich personal journal application built with Next.js and React.
+A beautiful and feature-rich personal writing application built with Next.js and React.
 
 ## Features
 
-- 📆 **Beautiful Calendar View**: Select dates to write your journal entries
+- 📆 **Beautiful Calendar View**: Select dates to write your scripts
 - 🔊 **White Noise Sounds**: Enjoy soothing background sounds while writing
 - 📵 **Offline Support**: Works even when disconnected from the internet
-- 👥 **Sharing Capabilities**: Invite friends to read specific entries or your entire journal
+- 👥 **Sharing Capabilities**: Invite friends to read specific scripts or your entire collection
 
 ## Tech Stack
 
@@ -28,8 +28,8 @@ A beautiful and feature-rich personal journal application built with Next.js and
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/myjournal.git
-cd myjournal
+git clone https://github.com/yourusername/soul-scripts.git
+cd soul-scripts
 ```
 
 2. Install dependencies:
@@ -50,10 +50,10 @@ yarn dev
 
 ## How to Use
 
-1. **Writing Entries**: Select a date from the calendar and start writing in the journal area
+1. **Writing Scripts**: Select a date from the calendar and start writing in the script area
 2. **Play White Noise**: Select a sound from the sound player to create a soothing atmosphere
 3. **Offline Mode**: Toggle offline mode to continue writing even without internet connection
-4. **Share Entries**: Use the sharing panel to share specific entries with friends
+4. **Share Scripts**: Use the sharing panel to share specific scripts with friends
 
 ## Audio Credits
 
@@ -61,7 +61,6 @@ The white noise sounds used in this application are:
 - Rain sounds
 - Forest ambience
 - Cafe chatter
-- Crackling fire
 - Ocean waves
 
 ## License

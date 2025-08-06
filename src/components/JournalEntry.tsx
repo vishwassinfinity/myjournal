@@ -157,7 +157,7 @@ const JournalEntry: React.FC<JournalEntryProps> = ({ date }) => {
           {formatDisplayDate(date)}
           {isNewEntry && (
             <span className="ml-3 text-sm font-normal text-journal-accent bg-journal-accent/10 px-2 py-1 rounded-full animate-pulse">
-              New Entry
+              New Script
             </span>
           )}
           {currentMood && (

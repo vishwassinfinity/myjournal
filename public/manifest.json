@@ -1,7 +1,7 @@
 {
-  "name": "MyJournal - Personal Journal App",
-  "short_name": "MyJournal",
-  "description": "A personal journal app with offline support and sharing capabilities",
+  "name": "Soul Scripts - Personal Writing Companion",
+  "short_name": "Soul Scripts",
+  "description": "A personal writing app with offline support and sharing capabilities",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#F8F9FA",

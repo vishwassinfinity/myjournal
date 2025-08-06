@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 
 const NetworkStatus: React.FC = () => {
-  const [isOnline, setIsOnline] = useState(true);
+  const [isOnline, setIsOnline] = useState(true); // Default to true to avoid hydration mismatch
   const [offlineModeEnabled, setOfflineModeEnabled] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [connectionQuality, setConnectionQuality] = useState(100);
   
   useEffect(() => {
-    // Check initial status
+    // Check initial status after hydration
     setIsOnline(navigator.onLine);
     
     // Add event listeners for online/offline events

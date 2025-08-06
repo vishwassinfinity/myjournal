@@ -5,10 +5,11 @@ interface NetworkState {
   isWorkingOffline: boolean;
   setIsOnline: (isOnline: boolean) => void;
   toggleWorkingOffline: () => void;
+  initializeNetworkStatus: () => void;
 }
 
 export const useNetworkStore = create<NetworkState>((set) => ({
-  isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
+  isOnline: true, // Default to true to avoid hydration mismatch
   isWorkingOffline: false,
   
   setIsOnline: (isOnline) => {
@@ -17,5 +18,11 @@ export const useNetworkStore = create<NetworkState>((set) => ({
   
   toggleWorkingOffline: () => {
     set((state) => ({ isWorkingOffline: !state.isWorkingOffline }));
+  },
+  
+  initializeNetworkStatus: () => {
+    if (typeof navigator !== 'undefined') {
+      set({ isOnline: navigator.onLine });
+    }
   },
 })); 

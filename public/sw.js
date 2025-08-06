@@ -1,4 +1,4 @@
-const CACHE_NAME = 'myjournal-cache-v1';
+const CACHE_NAME = 'soul-scripts-cache-v1';
 const urlsToCache = [
   '/',
   '/index.html',

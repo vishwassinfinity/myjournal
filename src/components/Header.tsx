@@ -25,7 +25,7 @@ const Header: React.FC<HeaderProps> = ({ toggleTheme, isDarkMode }) => {
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-journal-text-light dark:text-journal-text-dark text-shadow">
-            <span className="text-journal-primary">My</span>Journal
+            <span className="text-journal-primary">Soul</span> Scripts
           </h1>
         </div>
         
@@ -52,7 +52,7 @@ const Header: React.FC<HeaderProps> = ({ toggleTheme, isDarkMode }) => {
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 group-hover:rotate-12 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            <span className="group-hover:translate-x-0.5 transition-transform duration-300">New Entry</span>
+            <span className="group-hover:translate-x-0.5 transition-transform duration-300">New Script</span>
           </button>
           
           <button 

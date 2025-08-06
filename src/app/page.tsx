@@ -7,23 +7,26 @@ import SoundPlayer from '@/components/SoundPlayer';
 import NetworkStatus from '@/components/NetworkStatus';
 import ShareEntries from '@/components/ShareEntries';
 import Header from '@/components/Header';
+import { useNetworkStore } from '@/store/networkStore';
 import { registerServiceWorker } from '@/lib/serviceWorker';
 
 export default function Home() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const initializeNetworkStatus = useNetworkStore((state) => state.initializeNetworkStatus);
   
   useEffect(() => {
     // Register service worker for offline support
     registerServiceWorker();
     
+    // Initialize network status after hydration
+    initializeNetworkStatus();
+    
     // Check preferred theme
-    if (typeof window !== 'undefined') {
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      setIsDarkMode(prefersDark);
-      document.documentElement.classList.toggle('dark', prefersDark);
-    }
-  }, []);
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    setIsDarkMode(prefersDark);
+    document.documentElement.classList.toggle('dark', prefersDark);
+  }, [initializeNetworkStatus]);
   
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
@@ -43,28 +46,28 @@ export default function Home() {
       
       <Header toggleTheme={toggleTheme} isDarkMode={isDarkMode} />
       
-      <main className="container mx-auto px-4 py-8 max-w-7xl relative z-10">
+      <main className="container mx-auto px-4 py-8 max-w-full relative z-10">
         <NetworkStatus />
         
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-6">
           {/* Left sidebar */}
-          <div className="lg:col-span-3 space-y-6">
-            <div className="backdrop-blur-sm bg-white/70 dark:bg-gray-800/70 rounded-xl shadow-lg p-5 transition-all duration-300 hover:shadow-xl border border-gray-100 dark:border-gray-700 animate-fade-in">
+          <div className="lg:col-span-3 space-y-8">
+            <div className="backdrop-blur-sm bg-white/70 dark:bg-gray-800/70 rounded-xl shadow-lg p-8 transition-all duration-300 hover:shadow-xl border border-gray-100 dark:border-gray-700 animate-fade-in">
               <Calendar onSelectDate={handleDateSelect} />
             </div>
             
-            <div className="backdrop-blur-sm bg-white/70 dark:bg-gray-800/70 rounded-xl shadow-lg p-5 transition-all duration-300 hover:shadow-xl border border-gray-100 dark:border-gray-700 animate-fade-in animation-delay-300">
+            <div className="backdrop-blur-sm bg-white/70 dark:bg-gray-800/70 rounded-xl shadow-lg p-8 transition-all duration-300 hover:shadow-xl border border-gray-100 dark:border-gray-700 animate-fade-in animation-delay-300">
               <SoundPlayer />
             </div>
           </div>
           
           {/* Main content */}
-          <div className="lg:col-span-9 space-y-6">
-            <div className="backdrop-blur-sm bg-white/70 dark:bg-gray-800/70 rounded-xl shadow-lg p-6 transition-all duration-300 hover:shadow-xl border border-gray-100 dark:border-gray-700 animate-fade-in animation-delay-150">
+          <div className="lg:col-span-9 space-y-8">
+            <div className="backdrop-blur-sm bg-white/70 dark:bg-gray-800/70 rounded-xl shadow-lg p-10 transition-all duration-300 hover:shadow-xl border border-gray-100 dark:border-gray-700 animate-fade-in animation-delay-150">
               <JournalEntry date={selectedDate} />
             </div>
             
-            <div className="backdrop-blur-sm bg-white/70 dark:bg-gray-800/70 rounded-xl shadow-lg p-6 transition-all duration-300 hover:shadow-xl border border-gray-100 dark:border-gray-700 animate-fade-in animation-delay-450">
+            <div className="backdrop-blur-sm bg-white/70 dark:bg-gray-800/70 rounded-xl shadow-lg p-8 transition-all duration-300 hover:shadow-xl border border-gray-100 dark:border-gray-700 animate-fade-in animation-delay-450">
               <ShareEntries />
             </div>
           </div>
@@ -81,7 +84,7 @@ export default function Home() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
           </svg>
           <span className="absolute right-full mr-2 bg-white dark:bg-gray-800 text-journal-text-light dark:text-journal-text-dark px-2 py-1 rounded text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity shadow pointer-events-none">
-            New Entry
+            New Script
           </span>
         </button>
       </div>
