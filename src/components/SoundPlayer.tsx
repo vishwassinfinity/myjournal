@@ -1,18 +1,16 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useAudioStore, Sound, sounds as storeSounds } from '../store/audioStore';
 
 const SoundPlayer: React.FC = () => {
-  const { 
-    currentSound, 
-    setCurrentSound, 
-    isPlaying, 
-    setIsPlaying, 
-    volume, 
-    setVolume, 
-    togglePlay 
-  } = useAudioStore();
+  const currentSound = useAudioStore((s) => s.currentSound);
+  const setCurrentSound = useAudioStore((s) => s.setCurrentSound);
+  const isPlaying = useAudioStore((s) => s.isPlaying);
+  const setIsPlaying = useAudioStore((s) => s.setIsPlaying);
+  const volume = useAudioStore((s) => s.volume);
+  const setVolume = useAudioStore((s) => s.setVolume);
+  const togglePlay = useAudioStore((s) => s.togglePlay);
   const [visualizerActive, setVisualizerActive] = useState(false);
-  const [visualizerType, setVisualizerType] = useState<'bars' | 'wave' | 'circle'>('wave');
+  const [visualizerType] = useState<'bars' | 'wave' | 'circle'>('wave');
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationRef = useRef<number | null>(null);
@@ -55,47 +53,13 @@ const SoundPlayer: React.FC = () => {
     audioRef.current.volume = volume;
   }, [volume]);
   
-  useEffect(() => {
-    if (isPlaying && visualizerActive && canvasRef.current) {
-      startVisualizer();
-    } else if (!isPlaying || !visualizerActive) {
-      stopVisualizer();
-    }
-    
-    return () => {
-      stopVisualizer();
-    };
-  }, [isPlaying, visualizerActive, visualizerType]);
-  
-  useEffect(() => {
-    if (!audioRef.current || !currentSound) return;
-    
-    audioRef.current.src = currentSound.src;
-    
-    if (isPlaying) {
-      audioRef.current.play().catch(e => {
-        console.error('Audio play failed:', e);
-        setIsPlaying(false);
-      });
-    } else {
-      audioRef.current.pause();
-    }
-  }, [currentSound, isPlaying, setIsPlaying]);
-  
-  const toggleSound = (sound: Sound) => {
-    if (currentSound?.id === sound.id && isPlaying) {
-      audioRef.current?.pause();
-      setIsPlaying(false);
-    } else {
-      setCurrentSound(sound);
-      setIsPlaying(true);
-    }
-  };
-  
-  const startVisualizer = () => {
+  const startVisualizer = useCallback(() => {
     if (!canvasRef.current || !audioRef.current) return;
     
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const AudioContextCtor =
+      window.AudioContext ?? (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!AudioContextCtor) return;
+    const audioContext = new AudioContextCtor();
     const audioSrc = audioContext.createMediaElementSource(audioRef.current);
     const analyser = audioContext.createAnalyser();
     
@@ -371,7 +335,7 @@ const SoundPlayer: React.FC = () => {
     
     // Start rendering
     renderFrame();
-  };
+  }, [currentSound, visualizerType, soundColors]);
   
   const stopVisualizer = () => {
     if (animationRef.current !== null) {
@@ -389,6 +353,43 @@ const SoundPlayer: React.FC = () => {
   
   const getActiveColor = () => {
     return soundColors[currentSound?.id || 'rain'] || 'from-blue-400 to-blue-600';
+  };
+  
+  useEffect(() => {
+    if (isPlaying && visualizerActive && canvasRef.current) {
+      startVisualizer();
+    } else if (!isPlaying || !visualizerActive) {
+      stopVisualizer();
+    }
+    
+    return () => {
+      stopVisualizer();
+    };
+  }, [isPlaying, visualizerActive, visualizerType, startVisualizer]);
+  
+  useEffect(() => {
+    if (!audioRef.current || !currentSound) return;
+    
+    audioRef.current.src = currentSound.src;
+    
+    if (isPlaying) {
+      audioRef.current.play().catch(e => {
+        console.error('Audio play failed:', e);
+        setIsPlaying(false);
+      });
+    } else {
+      audioRef.current.pause();
+    }
+  }, [currentSound, isPlaying, setIsPlaying]);
+  
+  const toggleSound = (sound: Sound) => {
+    if (currentSound?.id === sound.id && isPlaying) {
+      audioRef.current?.pause();
+      setIsPlaying(false);
+    } else {
+      setCurrentSound(sound);
+      setIsPlaying(true);
+    }
   };
   
   return (
@@ -534,4 +535,4 @@ const SoundPlayer: React.FC = () => {
   );
 };
 
-export default SoundPlayer; 
+export default SoundPlayer;

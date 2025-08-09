@@ -5,71 +5,96 @@ import { useNetworkStore } from '@/store/networkStore';
 const ShareEntries: React.FC = () => {
   const entries = useJournalStore((state) => state.entries);
   const shareEntry = useJournalStore((state) => state.shareEntry);
-  const { isOnline, isWorkingOffline } = useNetworkStore();
+  const unshareEntry = useJournalStore((s) => s.unshareEntry);
+  const getEntryById = useJournalStore((s) => s.getEntryById);
+  const revokeShareLink = useJournalStore((s) => s.revokeShareLink);
+  const toggleShareStatus = useJournalStore((s) => s.toggleShareStatus);
+  const isOnline = useNetworkStore((s) => s.isOnline);
+  const isWorkingOffline = useNetworkStore((s) => s.isWorkingOffline);
   
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
   const [shareEmail, setShareEmail] = useState('');
   const [isSharing, setIsSharing] = useState(false);
   const [shareSuccess, setShareSuccess] = useState(false);
   const [shareError, setShareError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   
-  // Filter for entries that have content
   const entriesWithContent = entries.filter(entry => entry.content.trim().length > 0);
+  const current = selectedEntryId ? getEntryById(selectedEntryId) : undefined;
   
   const handleEntrySelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
     setSelectedEntryId(value === '' ? null : value);
     setShareSuccess(false);
     setShareError(null);
+    setCopied(false);
   };
   
   const handleShareSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!selectedEntryId || !shareEmail) {
-      setShareError('Please select an entry and enter an email address');
+      setShareError('Select an entry and enter an email');
       return;
     }
-    
-    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(shareEmail)) {
-      setShareError('Please enter a valid email address');
+      setShareError('Invalid email');
       return;
     }
-    
     setIsSharing(true);
     setShareError(null);
-    
-    // Simulate API call
     setTimeout(() => {
       try {
-        const entry = entries.find(e => e.id === selectedEntryId);
-        if (entry) {
-          // Update the entry sharing status
-          shareEntry(selectedEntryId, shareEmail);
-          
-          setShareSuccess(true);
-          setShareEmail('');
-        } else {
-          setShareError('Entry not found');
-        }
+        shareEntry(selectedEntryId, shareEmail.toLowerCase());
+        setShareSuccess(true);
+        setShareEmail('');
       } catch {
-        setShareError('Failed to share the entry. Please try again.');
+        setShareError('Share failed');
       } finally {
         setIsSharing(false);
       }
-    }, 1000);
+    }, 400);
   };
-  
+
+  const copyLink = async () => {
+    if (!current?.shareToken) return;
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const url = `${origin}/shared/${current.shareToken}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setShareError('Copy failed');
+    }
+  };
+
+  const removeEmail = (email: string) => {
+    if (!current) return;
+    unshareEntry(current.id, email);
+  };
+
+  const revokeLink = () => {
+    if (!current) return;
+    if (confirm('Revoke link and remove all shares?')) {
+      revokeShareLink(current.id);
+      setCopied(false);
+      setShareSuccess(false);
+    }
+  };
+
+  const togglePublic = () => {
+    if (current) toggleShareStatus(current.id);
+  };
+
   const isDisabled = !isOnline || isWorkingOffline;
-  
+
   return (
     <div className={`space-y-6 ${isDisabled ? 'opacity-60 pointer-events-none' : ''}`}>
       <h2 className="text-2xl font-bold text-journal-text-light dark:text-journal-text-dark">
         Share Your Scripts
       </h2>
-      
+
       {isDisabled && (
         <div className="p-6 bg-gray-100 dark:bg-gray-800 rounded-xl text-center">
           <p className="text-journal-muted-light dark:text-journal-muted-dark">
@@ -77,7 +102,7 @@ const ShareEntries: React.FC = () => {
           </p>
         </div>
       )}
-      
+
       {!isDisabled && entriesWithContent.length === 0 && (
         <div className="p-6 bg-gray-100 dark:bg-gray-800 rounded-xl text-center">
           <p className="text-journal-muted-light dark:text-journal-muted-dark">
@@ -85,110 +110,93 @@ const ShareEntries: React.FC = () => {
           </p>
         </div>
       )}
-      
+
       {!isDisabled && entriesWithContent.length > 0 && (
-        <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-6 shadow-inner">
-          <form onSubmit={handleShareSubmit} className="space-y-5">
-            <div>
-              <label 
-                htmlFor="entry-select" 
-                className="block text-sm font-medium text-journal-text-light dark:text-journal-text-dark mb-2"
-              >
-                Select an entry to share
-              </label>
-              <select
-                id="entry-select"
-                value={selectedEntryId || ''}
-                onChange={handleEntrySelect}
-                className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-journal-text-light dark:text-journal-text-dark focus:ring-2 focus:ring-journal-primary focus:border-transparent"
-              >
-                <option value="">-- Select an entry --</option>
-                {entriesWithContent.map(entry => (
-                  <option key={entry.id} value={entry.id}>
-                    {entry.date} {entry.shared ? '(Shared)' : ''}
-                  </option>
-                ))}
-              </select>
-            </div>
-            
-            <div>
-              <label 
-                htmlFor="share-email" 
-                className="block text-sm font-medium text-journal-text-light dark:text-journal-text-dark mb-2"
-              >
-                Share with (email address)
-              </label>
-              <input
-                id="share-email"
-                type="email"
-                value={shareEmail}
-                onChange={(e) => setShareEmail(e.target.value)}
-                placeholder="example@email.com"
-                className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-journal-text-light dark:text-journal-text-dark focus:ring-2 focus:ring-journal-primary focus:border-transparent"
-              />
-            </div>
-            
-            {shareError && (
-              <div className="p-3 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 rounded-lg text-sm">
-                {shareError}
-              </div>
-            )}
-            
-            {shareSuccess && (
-              <div className="p-3 bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-300 rounded-lg text-sm">
-                Entry successfully shared with {shareEmail}!
-              </div>
-            )}
-            
-            <div className="flex justify-end">
-              <button
-                type="submit"
-                disabled={isSharing}
-                className="px-5 py-2.5 bg-journal-primary hover:bg-journal-secondary text-white rounded-lg shadow-sm hover:shadow transition-all duration-200 flex items-center font-medium disabled:opacity-70 disabled:cursor-not-allowed"
-              >
-                {isSharing ? (
+        <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-6 shadow-inner space-y-6">
+          <div className="space-y-3">
+            <label className="block text-sm font-medium mb-1">
+              Select a script
+            </label>
+            <select
+              value={selectedEntryId || ''}
+              onChange={handleEntrySelect}
+              className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-sm"
+            >
+              <option value="">-- Select --</option>
+              {entriesWithContent.map(entry => (
+                <option key={entry.id} value={entry.id}>
+                  {entry.title?.trim() || 'Untitled'} • {entry.date}{entry.shared ? ' (Shared)' : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {current && (
+            <div className="space-y-5">
+              <form onSubmit={handleShareSubmit} className="space-y-4">
+                <div className="flex gap-3">
+                  <input
+                    type="email"
+                    value={shareEmail}
+                    onChange={(e) => setShareEmail(e.target.value)}
+                    placeholder="Add collaborator email"
+                    className="flex-1 p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-sm"
+                  />
+                  <button
+                    type="submit"
+                    disabled={isSharing}
+                    className="px-4 py-2 rounded-lg bg-journal-primary hover:bg-journal-secondary text-white text-sm flex items-center gap-2 disabled:opacity-70"
+                  >
+                    {isSharing ? (
+                      <>
+                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" strokeWidth="4"/>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                        </svg>
+                        Sharing
+                      </>
+                    ) : 'Share'}
+                  </button>
+                </div>
+                {shareError && <div className="text-xs text-red-500">{shareError}</div>}
+                {shareSuccess && !shareError && <div className="text-xs text-green-600">Shared.</div>}
+              </form>
+
+              <div className="flex flex-wrap items-center gap-3 text-xs">
+                <button onClick={togglePublic} className={`px-3 py-1 rounded-md border ${current.shared ? 'bg-green-600 text-white border-green-600' : 'border-gray-300 dark:border-gray-600'}`}>
+                  {current.shared ? 'Public Enabled' : 'Enable Public'}
+                </button>
+                {current.shareToken && (
                   <>
-                    <svg className="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Sharing...
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                    </svg>
-                    Share Entry
+                    <button onClick={copyLink} className="px-3 py-1 rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
+                      {copied ? 'Copied!' : 'Copy Link'}
+                    </button>
+                    <button onClick={revokeLink} className="px-3 py-1 rounded-md border border-red-400 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30">
+                      Revoke
+                    </button>
                   </>
                 )}
-              </button>
+              </div>
+
+              {current.sharedWith.length > 0 && (
+                <div className="space-y-2">
+                  <div className="text-sm font-medium">Collaborators</div>
+                  <ul className="space-y-1 text-sm">
+                    {current.sharedWith.map(email => (
+                      <li key={email} className="flex items-center justify-between bg-white/70 dark:bg-gray-700/40 rounded-md px-3 py-1">
+                        <span>{email}</span>
+                        <button onClick={() => removeEmail(email)} className="text-red-500 hover:text-red-600 text-xs">Remove</button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
-          </form>
-        </div>
-      )}
-      
-      {selectedEntryId && entries.find(e => e.id === selectedEntryId)?.sharedWith && entries.find(e => e.id === selectedEntryId)!.sharedWith!.length > 0 && (
-        <div className="mt-4">
-          <h3 className="text-lg font-medium text-journal-text-light dark:text-journal-text-dark mb-3">
-            Already Shared With:
-          </h3>
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
-            <ul className="space-y-2">
-              {entries.find(e => e.id === selectedEntryId)!.sharedWith!.map((email, idx) => (
-                <li key={idx} className="flex items-center gap-2 text-journal-text-light dark:text-journal-text-dark">
-                  <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  {email}
-                </li>
-              ))}
-            </ul>
-          </div>
+          )}
         </div>
       )}
     </div>
   );
 };
 
-export default ShareEntries; 
+export default ShareEntries;

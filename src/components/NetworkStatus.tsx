@@ -1,128 +1,97 @@
-import React, { useState, useEffect } from 'react';
+'use client';
 
-const NetworkStatus: React.FC = () => {
-  const [isOnline, setIsOnline] = useState(true); // Default to true to avoid hydration mismatch
-  const [offlineModeEnabled, setOfflineModeEnabled] = useState(false);
+import React, { useState, useMemo } from 'react';
+import { useJournalStore } from '../store/journalStore';
+
+const WritingStats: React.FC = () => {
+  const entries = useJournalStore((s) => s.entries);
   const [showDetails, setShowDetails] = useState(false);
-  const [connectionQuality, setConnectionQuality] = useState(100);
-  
-  useEffect(() => {
-    // Check initial status after hydration
-    setIsOnline(navigator.onLine);
-    
-    // Add event listeners for online/offline events
-    const handleOnline = () => {
-      setIsOnline(true);
-      simulateConnectionQuality();
-    };
-    
-    const handleOffline = () => {
-      setIsOnline(false);
-      setConnectionQuality(0);
-    };
-    
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    
-    // Simulate connection quality
-    simulateConnectionQuality();
-    
-    // Simulate connection quality fluctuations
-    const interval = setInterval(() => {
-      if (isOnline) {
-        simulateConnectionQuality();
+
+  const countWords = (text: string): number => text.trim().split(/\s+/).filter(Boolean).length;
+
+  const todaysWordCount = useMemo(() => {
+    const today = new Date().toISOString().split('T')[0];
+    const todaysEntry = entries.find((e) => e.date === today);
+    return todaysEntry ? countWords(todaysEntry.content) : 0;
+  }, [entries]);
+
+  const totalWords = useMemo(() => {
+    return entries.reduce((sum, e) => sum + countWords(e.content), 0);
+  }, [entries]);
+
+  const currentStreak = useMemo(() => {
+    let streak = 0;
+    const currentDate = new Date();
+    for (let i = 0; i < 30; i++) {
+      const checkDate = new Date(currentDate);
+      checkDate.setDate(currentDate.getDate() - i);
+      const dateString = checkDate.toISOString().split('T')[0];
+      const hasEntry = entries.some(
+        (e) => e.date === dateString && e.content.trim().length > 0
+      );
+      if (hasEntry) {
+        streak++;
+      } else if (i > 0) {
+        break;
       }
-    }, 5000);
-    
-    // Clean up event listeners on unmount
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-      clearInterval(interval);
-    };
-  }, [isOnline]);
+    }
+    return streak;
+  }, [entries]);
   
-  const simulateConnectionQuality = () => {
-    // Simulate network quality between 70-100%
-    const quality = Math.floor(Math.random() * 30) + 70;
-    setConnectionQuality(quality);
+  const getStreakMessage = () => {
+    if (currentStreak === 0) return 'Start your writing journey today! ✨';
+    if (currentStreak === 1) return 'Great start! Keep the momentum going! 🚀';
+    if (currentStreak <= 3) return "Building a habit! You're doing great! 💪";
+    if (currentStreak <= 7) return "Amazing streak! You're on fire! 🔥";
+    if (currentStreak <= 30) return 'Incredible dedication! Keep it up! 🌟';
+    return "Writing master! Your consistency is inspiring! 👑";
   };
   
-  const toggleOfflineMode = () => {
-    setOfflineModeEnabled(!offlineModeEnabled);
+  const getTodaysGoal = () => {
+    const targetWords = 250;
+    const progress = Math.min((todaysWordCount / targetWords) * 100, 100);
+    return { targetWords, progress };
   };
-  
-  const getQualityColor = () => {
-    if (connectionQuality >= 90) return 'bg-green-500';
-    if (connectionQuality >= 70) return 'bg-yellow-500';
-    if (connectionQuality >= 50) return 'bg-orange-500';
-    return 'bg-red-500';
-  };
-  
+
   return (
     <div className="my-4 rounded-xl overflow-hidden glass shadow transition-all duration-300 group hover:shadow-md border border-gray-100 dark:border-gray-700 animate-fade-in">
       <div className="flex items-center justify-between p-4 cursor-pointer" onClick={() => setShowDetails(!showDetails)}>
         <div className="flex items-center gap-4">
-          {isOnline ? (
-            <div className="flex items-center">
-              <div className="relative">
-                <span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-2"></span>
-                <span className="absolute -inset-0.5 bg-green-500 rounded-full opacity-60 animate-ping"></span>
-              </div>
-              <span className="text-sm font-medium text-journal-text-light dark:text-journal-text-dark">
-                {offlineModeEnabled ? 'Online (Offline Mode)' : 'Online'}
-              </span>
+          <div className="flex items-center">
+            <div className="relative">
+              <span className="inline-block w-3 h-3 bg-journal-primary rounded-full mr-2"></span>
+              <span className="absolute -inset-0.5 bg-journal-primary rounded-full opacity-60 animate-ping"></span>
             </div>
-          ) : (
-            <div className="flex items-center">
-              <span className="inline-block w-3 h-3 bg-red-500 rounded-full mr-2"></span>
-              <span className="text-sm font-medium text-journal-text-light dark:text-journal-text-dark">Offline</span>
-            </div>
-          )}
+            <span className="text-sm font-medium text-journal-text-light dark:text-journal-text-dark">
+              Writing Dashboard
+            </span>
+          </div>
           
-          {isOnline && !offlineModeEnabled && (
+          <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-20 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                <div 
-                  className={`h-full ${getQualityColor()} transition-all duration-1000`} 
-                  style={{ width: `${connectionQuality}%` }}
-                ></div>
-              </div>
-              <span className="text-xs text-journal-muted-light dark:text-journal-muted-dark">
-                {connectionQuality}%
+              <svg className="w-4 h-4 text-journal-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+              </svg>
+              <span className="text-sm font-semibold text-journal-primary">
+                {currentStreak} day streak
               </span>
             </div>
-          )}
+            
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4 text-journal-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <span className="text-sm font-medium text-journal-text-light dark:text-journal-text-dark">
+                {todaysWordCount} words today
+              </span>
+            </div>
+          </div>
         </div>
         
         <div className="flex items-center gap-3">
-          <button 
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleOfflineMode();
-            }}
-            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 focus:outline-none flex items-center ${
-              offlineModeEnabled 
-                ? 'bg-journal-primary text-white hover:bg-journal-secondary shadow-inner' 
-                : 'bg-gray-100 dark:bg-gray-700 text-journal-text-light dark:text-journal-text-dark hover:bg-gray-200 dark:hover:bg-gray-600'
-            }`}
-          >
-            {offlineModeEnabled ? (
-              <>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
-                </svg>
-                Disable Offline Mode
-              </>
-            ) : (
-              <>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
-                Enable Offline Mode
-              </>
-            )}
-          </button>
+          <div className="text-xs px-3 py-1.5 bg-journal-primary/10 text-journal-primary rounded-full font-medium">
+            {totalWords.toLocaleString()} total words
+          </div>
           
           <svg 
             xmlns="http://www.w3.org/2000/svg" 
@@ -138,45 +107,65 @@ const NetworkStatus: React.FC = () => {
       
       {showDetails && (
         <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-50/50 dark:bg-gray-800/50 animate-fade-in">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex flex-col">
-              <span className="text-xs text-journal-muted-light dark:text-journal-muted-dark mb-1">Last Sync</span>
-              <span className="text-sm text-journal-text-light dark:text-journal-text-dark">
-                {new Date().toLocaleString()}
-              </span>
-            </div>
-            
-            <div className="flex flex-col">
-              <span className="text-xs text-journal-muted-light dark:text-journal-muted-dark mb-1">Storage Used</span>
-              <div className="flex items-center gap-2">
-                <div className="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                  <div className="h-full bg-journal-secondary transition-all duration-1000 w-2/3"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-medium text-journal-text-light dark:text-journal-text-dark">
+                    Today&apos;s Goal Progress
+                  </span>
+                  <span className="text-xs text-journal-muted-light dark:text-journal-muted-dark">
+                    {todaysWordCount} / {getTodaysGoal().targetWords} words
+                  </span>
                 </div>
-                <span className="text-xs whitespace-nowrap">12.3 MB</span>
+                <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-journal-primary to-journal-secondary transition-all duration-1000"
+                    style={{ width: `${getTodaysGoal().progress}%` }}
+                  ></div>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2 p-3 bg-journal-primary/5 dark:bg-journal-primary/10 rounded-lg">
+                <svg className="w-5 h-5 text-journal-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+                <span className="text-sm text-journal-text-light dark:text-journal-text-dark">
+                  {getStreakMessage()}
+                </span>
               </div>
             </div>
             
-            <div className="flex flex-col">
-              <span className="text-xs text-journal-muted-light dark:text-journal-muted-dark mb-1">Sync Status</span>
-              <div className="flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span className="text-sm text-journal-text-light dark:text-journal-text-dark">All entries synced</span>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center p-3 bg-white/50 dark:bg-gray-800/50 rounded-lg">
+                  <div className="text-lg font-bold text-journal-primary">
+                    {entries.length}
+                  </div>
+                  <div className="text-xs text-journal-muted-light dark:text-journal-muted-dark">
+                    Total Scripts
+                  </div>
+                </div>
+                
+                <div className="text-center p-3 bg-white/50 dark:bg-gray-800/50 rounded-lg">
+                  <div className="text-lg font-bold text-journal-secondary">
+                    {Math.ceil(totalWords / 250) || 0}
+                  </div>
+                  <div className="text-xs text-journal-muted-light dark:text-journal-muted-dark">
+                    Pages Written
+                  </div>
+                </div>
+              </div>
+              
+              <div className="text-center">
+                <div className="text-xs text-journal-muted-light dark:text-journal-muted-dark mb-1">
+                  💡 Writing Tip of the Day
+                </div>
+                <div className="text-sm text-journal-text-light dark:text-journal-text-dark italic">
+                  &ldquo;Write freely without editing yourself initially. Let your thoughts flow!&rdquo;
+                </div>
               </div>
             </div>
-          </div>
-          
-          <div className="flex justify-end mt-3">
-            <button 
-              className="text-xs text-journal-primary hover:text-journal-secondary transition-colors flex items-center"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Force Sync
-            </button>
           </div>
         </div>
       )}
@@ -184,4 +173,4 @@ const NetworkStatus: React.FC = () => {
   );
 };
 
-export default NetworkStatus; 
+export default WritingStats;
