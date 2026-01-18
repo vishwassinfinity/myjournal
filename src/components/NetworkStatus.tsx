@@ -106,7 +106,7 @@ const WritingStats: React.FC = () => {
       </div>
       
       {showDetails && (
-        <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-50/50 dark:bg-gray-800/50 animate-fade-in">
+        <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-50/50 dark:bg-[#2a2a2a]/50 animate-fade-in">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div>
@@ -118,7 +118,7 @@ const WritingStats: React.FC = () => {
                     {todaysWordCount} / {getTodaysGoal().targetWords} words
                   </span>
                 </div>
-                <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                <div className="w-full h-2 bg-gray-200 dark:bg-[#2a2a2a] rounded-full overflow-hidden">
                   <div 
                     className="h-full bg-gradient-to-r from-journal-primary to-journal-secondary transition-all duration-1000"
                     style={{ width: `${getTodaysGoal().progress}%` }}
@@ -138,7 +138,7 @@ const WritingStats: React.FC = () => {
             
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div className="text-center p-3 bg-white/50 dark:bg-gray-800/50 rounded-lg">
+                <div className="text-center p-3 bg-white/50 dark:bg-[#2a2a2a]/50 rounded-lg">
                   <div className="text-lg font-bold text-journal-primary">
                     {entries.length}
                   </div>
@@ -147,7 +147,7 @@ const WritingStats: React.FC = () => {
                   </div>
                 </div>
                 
-                <div className="text-center p-3 bg-white/50 dark:bg-gray-800/50 rounded-lg">
+                <div className="text-center p-3 bg-white/50 dark:bg-[#2a2a2a]/50 rounded-lg">
                   <div className="text-lg font-bold text-journal-secondary">
                     {Math.ceil(totalWords / 250) || 0}
                   </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback, memo } from 'react';
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay } from 'date-fns';
 import { useJournalStore } from '@/store/journalStore';
 import { formatDate } from '@/lib/utils';
@@ -7,46 +7,58 @@ interface CalendarProps {
   onSelectDate: (date: Date) => void;
 }
 
-const Calendar: React.FC<CalendarProps> = ({ onSelectDate }) => {
+const Calendar: React.FC<CalendarProps> = memo(function Calendar({ onSelectDate }) {
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   
   const entries = useJournalStore(state => state.entries);
   
-  const prevMonth = () => {
-    setCurrentMonth(subMonths(currentMonth, 1));
-  };
+  // Memoize entry map to avoid recalculating on every render
+  const entryMap = useMemo(() => {
+    const map = new Map<string, { hasEntry: boolean; mood?: { emoji: string; label: string } }>();
+    entries.forEach(entry => {
+      map.set(entry.date, {
+        hasEntry: true,
+        mood: entry.mood
+      });
+    });
+    return map;
+  }, [entries]);
   
-  const nextMonth = () => {
-    setCurrentMonth(addMonths(currentMonth, 1));
-  };
+  const prevMonth = useCallback(() => {
+    setCurrentMonth(prev => subMonths(prev, 1));
+  }, []);
   
-  const onDateClick = (day: Date) => {
+  const nextMonth = useCallback(() => {
+    setCurrentMonth(prev => addMonths(prev, 1));
+  }, []);
+  
+  const onDateClick = useCallback((day: Date) => {
     setSelectedDate(day);
     onSelectDate(day);
-  };
+  }, [onSelectDate]);
   
   const renderHeader = () => {
     return (
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold text-journal-text-light dark:text-journal-text-dark">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-lg font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
           {format(currentMonth, 'MMMM yyyy')}
         </h2>
-        <div className="flex gap-2">
+        <div className="flex gap-1">
           <button 
             onClick={prevMonth}
-            className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className="p-2 rounded-xl hover:bg-purple-50 dark:hover:bg-[#2a2a2a] transition-all duration-200 group"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-journal-text-light dark:text-journal-text-dark" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-600 dark:text-purple-400 group-hover:-translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
           <button 
             onClick={nextMonth}
-            className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className="p-2 rounded-xl hover:bg-purple-50 dark:hover:bg-[#2a2a2a] transition-all duration-200 group"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-journal-text-light dark:text-journal-text-dark" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-600 dark:text-purple-400 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
             </svg>
           </button>
         </div>
@@ -55,14 +67,14 @@ const Calendar: React.FC<CalendarProps> = ({ onSelectDate }) => {
   };
   
   const renderDays = () => {
-    const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
     
     return (
-      <div className="grid grid-cols-7 gap-1 mb-2">
-        {weekDays.map((day) => (
+      <div className="grid grid-cols-7 gap-1 mb-3">
+        {weekDays.map((day, i) => (
           <div 
-            key={day} 
-            className="text-center text-xs font-semibold text-journal-muted-light dark:text-journal-muted-dark py-2"
+            key={`${day}-${i}`} 
+            className="text-center text-xs font-medium text-gray-400 dark:text-gray-500 py-2"
           >
             {day}
           </div>
@@ -79,18 +91,8 @@ const Calendar: React.FC<CalendarProps> = ({ onSelectDate }) => {
     
     const dateFormat = 'd';
     
-    let days = eachDayOfInterval({ start: startDate, end: endDate });
+    const days = eachDayOfInterval({ start: startDate, end: endDate });
     let formattedDate = '';
-    
-    // Get data about entries
-    const entryMap = new Map();
-    
-    entries.forEach(entry => {
-      entryMap.set(entry.date, {
-        hasEntry: true,
-        mood: entry.mood
-      });
-    });
     
     const getMoodClass = (moodEmoji: string) => {
       switch(moodEmoji) {
@@ -133,7 +135,7 @@ const Calendar: React.FC<CalendarProps> = ({ onSelectDate }) => {
     const weeks = [];
     let week = [];
     
-    for (let day of days) {
+    for (const day of days) {
       formattedDate = format(day, dateFormat);
       const cloneDay = day;
       const dateString = formatDate(day);
@@ -146,21 +148,21 @@ const Calendar: React.FC<CalendarProps> = ({ onSelectDate }) => {
       if (!isSameMonth(day, monthStart)) {
         dayClasses += ' opacity-40';
       } else if (isSameDay(day, selectedDate)) {
-        dayClasses += ' bg-journal-primary text-white shadow-md z-10';
+        dayClasses += ' bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/30 z-10 scale-105';
       } else if (mood) {
-        dayClasses += ` ${getMoodClass(mood.emoji)} text-gray-800 shadow-sm`;
+        dayClasses += ` ${getMoodClass(mood.emoji)} text-gray-800 dark:text-gray-200`;
       }
       
       week.push(
         <div
           key={day.toString()}
-          className={`p-1 text-center relative group day-with-mood ${mood ? 'has-mood' : ''}`}
+          className={`p-0.5 text-center relative group day-with-mood ${mood ? 'has-mood' : ''}`}
           onClick={() => onDateClick(cloneDay)}
         >
           <div 
-            className={`cursor-pointer rounded-lg flex items-center justify-center w-full h-full aspect-square ${dayClasses} 
-                     ${!isSameMonth(day, monthStart) ? 'text-gray-400 dark:text-gray-600' : 'text-journal-text-light dark:text-journal-text-dark'}
-                     hover:transform hover:scale-105 hover:shadow-sm`}
+            className={`cursor-pointer rounded-xl flex items-center justify-center w-full h-full aspect-square text-sm font-medium ${dayClasses} 
+                     ${!isSameMonth(day, monthStart) ? 'text-gray-300 dark:text-gray-600' : 'text-gray-700 dark:text-gray-300'}
+                     hover:bg-purple-100 dark:hover:bg-[#2a2a2a] hover:scale-105`}
           >
             <div className="relative">
               {formattedDate}
@@ -168,14 +170,14 @@ const Calendar: React.FC<CalendarProps> = ({ onSelectDate }) => {
           </div>
           
           {hasEntry && !mood && !isSameDay(day, selectedDate) && (
-            <span className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-journal-accent rounded-full"></span>
+            <span className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"></span>
           )}
           
           {mood && !isSameDay(day, selectedDate) && (
             <>
-              <div className={`absolute w-full h-0.5 bottom-0 left-0 ${getMoodColor(mood.emoji)}`}></div>
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
-                <div className="bg-black/70 text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+              <div className={`absolute w-full h-0.5 bottom-0 left-0 rounded-full ${getMoodColor(mood.emoji)}`}></div>
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center z-20">
+                <div className="bg-gray-900/90 dark:bg-gray-100/90 text-white dark:text-gray-900 text-xs py-1 px-2 rounded-lg whitespace-nowrap backdrop-blur-sm">
                   {mood.emoji} {mood.label}
                 </div>
               </div>
@@ -214,8 +216,8 @@ const Calendar: React.FC<CalendarProps> = ({ onSelectDate }) => {
   
   const selectedMood = getSelectedDateMood();
   
-  // Get mood color class for the selected date
-  const getMoodColorClass = (mood: { emoji: string; label: string } | undefined) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _getMoodColorClass = (mood: { emoji: string; label: string } | undefined) => {
     if (!mood) return '';
     
     switch (mood.emoji) {
@@ -237,29 +239,25 @@ const Calendar: React.FC<CalendarProps> = ({ onSelectDate }) => {
   };
   
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 transition-colors duration-300">
+    <div className="transition-colors duration-300">
       {renderHeader()}
       {renderDays()}
       {renderCells()}
-      <div className="text-center mt-3 font-medium text-journal-text-light dark:text-journal-text-dark">
+      <div className="text-center mt-4 pt-4 border-t border-purple-100 dark:border-gray-700">
         <div className="flex items-center justify-center gap-2">
-          <span className="text-sm">{format(selectedDate, 'MMMM d, yyyy')}</span>
+          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{format(selectedDate, 'MMMM d, yyyy')}</span>
           {selectedMood && (
-            <div className="flex items-center gap-1 ml-2 p-1 px-2 rounded-full" 
-                 style={{backgroundColor: `var(--${selectedMood.label.toLowerCase()}-color, #888)`, opacity: 0.2}}>
-              <span 
-                className="text-lg" 
-                title={`Feeling ${selectedMood.label}`}
-              >
+            <div className="flex items-center gap-1 ml-1 py-1 px-2 rounded-full bg-gradient-to-r from-purple-100 to-indigo-100 dark:from-[#2a2a2a] dark:to-[#2a2a2a]">
+              <span className="text-base" title={`Feeling ${selectedMood.label}`}>
                 {selectedMood.emoji}
               </span>
-              <span className="text-xs font-medium">{selectedMood.label}</span>
+              <span className="text-xs font-medium text-purple-700 dark:text-purple-300">{selectedMood.label}</span>
             </div>
           )}
         </div>
       </div>
     </div>
   );
-};
+});
 
-export default Calendar; 
+export default Calendar;

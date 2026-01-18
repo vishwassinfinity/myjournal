@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useAudioStore, Sound, sounds as storeSounds } from '../store/audioStore';
 
 const SoundPlayer: React.FC = () => {
@@ -16,7 +16,7 @@ const SoundPlayer: React.FC = () => {
   const animationRef = useRef<number | null>(null);
   
   // Map sound ids to their corresponding colors
-  const soundColors: Record<string, string> = {
+  const soundColors: Record<string, string> = useMemo(() => ({
     'lightRain': 'from-sky-300 to-blue-400',
     'rain': 'from-blue-400 to-blue-600',
     'forestAmbience': 'from-green-400 to-green-600',
@@ -29,7 +29,7 @@ const SoundPlayer: React.FC = () => {
     'pinkNoise': 'from-pink-300 to-pink-500',
     'brownNoise': 'from-amber-600 to-amber-800',
     'greenNoise': 'from-emerald-400 to-emerald-600'
-  };
+  }), []);
   
   // Map sound ids to their corresponding emoji icons
   const soundEmojis: Record<string, string> = {
@@ -393,131 +393,136 @@ const SoundPlayer: React.FC = () => {
   };
   
   return (
-    <div className="w-full bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden">
-      <div className="p-4">
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-              Sound Ambience
+    <div className="w-full">
+      <div className="space-y-5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
+              Ambience
             </h3>
-            
-            {currentSound && (
-              <button 
-                onClick={() => setVisualizerActive(!visualizerActive)}
-                className={`text-xs px-3 py-2 rounded-md transition-colors whitespace-nowrap ${
-                  visualizerActive 
-                    ? 'bg-journal-primary text-white' 
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
-                }`}
-              >
-                {visualizerActive ? 'Hide' : 'Show'} Visualizer
-              </button>
-            )}
           </div>
           
           {currentSound && (
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => togglePlay()}
-                className="group p-2.5 bg-gray-50/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl text-gray-600 dark:text-gray-300 hover:bg-white/80 dark:hover:bg-gray-700/80 hover:text-journal-primary dark:hover:text-journal-primary transition-all duration-300 border border-gray-200/50 dark:border-gray-600/50 hover:border-journal-primary/30 hover:shadow-sm"
-              >
-                {isPlaying ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 transition-transform duration-200 group-hover:scale-105" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
-                ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 transition-transform duration-200 group-hover:scale-105" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
-                  </svg>
-                )}
-              </button>
-              
-              <div className="flex-1 min-w-0 relative group">
-                <div className="flex items-center gap-2">
-                  <svg className="h-3.5 w-3.5 text-gray-400 dark:text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.816L4.617 14H2a1 1 0 01-1-1V7a1 1 0 011-1h2.617L8.383 3.816z" clipRule="evenodd" />
-                    <path d="M11.293 8.293a1 1 0 011.414 0 3 3 0 010 4.243 1 1 0 01-1.414-1.415 1 1 0 000-1.414 1 1 0 010-1.414z" />
-                  </svg>
-                  
-                  <div className="flex-1 relative">
-                    <input 
-                      type="range" 
-                      min="0" 
-                      max="1" 
-                      step="0.01" 
-                      value={volume} 
-                      onChange={(e) => setVolume(parseFloat(e.target.value))} 
-                      className="w-full h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full appearance-none cursor-pointer slider-subtle opacity-70 hover:opacity-100 transition-opacity duration-300"
-                    />
-                    <div 
-                      className="absolute top-0 h-1.5 bg-gradient-to-r from-journal-primary/60 to-journal-secondary/60 rounded-full pointer-events-none transition-all duration-200"
-                      style={{ width: `${volume * 100}%` }}
-                    />
-                  </div>
-                  
-                  <span className="text-xs text-gray-400 dark:text-gray-500 font-mono min-w-[2.5rem] text-right">
-                    {Math.round(volume * 100)}%
-                  </span>
-                </div>
-                
-                <style jsx>{`
-                  .slider-subtle::-webkit-slider-thumb {
-                    appearance: none;
-                    width: 14px;
-                    height: 14px;
-                    border-radius: 50%;
-                    background: linear-gradient(135deg, rgb(99, 102, 241), rgb(139, 92, 246));
-                    cursor: pointer;
-                    border: 2px solid white;
-                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-                    transition: all 0.2s ease-in-out;
-                  }
-                  .slider-subtle::-webkit-slider-thumb:hover {
-                    transform: scale(1.15);
-                    box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3);
-                  }
-                  .slider-subtle::-moz-range-thumb {
-                    width: 14px;
-                    height: 14px;
-                    border-radius: 50%;
-                    background: linear-gradient(135deg, rgb(99, 102, 241), rgb(139, 92, 246));
-                    cursor: pointer;
-                    border: 2px solid white;
-                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-                    transition: all 0.2s ease-in-out;
-                  }
-                  .dark .slider-subtle::-webkit-slider-thumb,
-                  .dark .slider-subtle::-moz-range-thumb {
-                    border-color: rgb(31, 41, 55);
-                  }
-                `}</style>
-              </div>
-            </div>
+            <button 
+              onClick={() => setVisualizerActive(!visualizerActive)}
+              className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all duration-300 ${
+                visualizerActive 
+                  ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md shadow-purple-500/20' 
+                  : 'bg-gray-100 dark:bg-[#2a2a2a] text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-[#333333]'
+              }`}
+            >
+              {visualizerActive ? '✓ Visualizer' : 'Visualizer'}
+            </button>
           )}
         </div>
         
+        {currentSound && (
+          <div className="flex items-center gap-4 p-3 bg-gradient-to-r from-purple-50/50 to-indigo-50/50 dark:from-[#2a2a2a]/50 dark:to-[#1c1c1c] rounded-xl border border-purple-100/50 dark:border-gray-700">
+            <button
+              onClick={() => togglePlay()}
+              className={`group p-3 rounded-xl transition-all duration-300 ${isPlaying ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-md shadow-purple-500/20' : 'bg-white dark:bg-[#2a2a2a] text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-gray-600 hover:shadow-md'}`}
+            >
+              {isPlaying ? (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                </svg>
+              )}
+            </button>
+            
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-3">
+                <svg className="h-4 w-4 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.816L4.617 14H2a1 1 0 01-1-1V7a1 1 0 011-1h2.617L8.383 3.816z" clipRule="evenodd" />
+                  <path d="M11.293 8.293a1 1 0 011.414 0 3 3 0 010 4.243 1 1 0 01-1.414-1.415 1 1 0 000-1.414 1 1 0 010-1.414z" />
+                </svg>
+                
+                <div className="flex-1 relative">
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="1" 
+                    step="0.01" 
+                    value={volume} 
+                    onChange={(e) => setVolume(parseFloat(e.target.value))} 
+                    className="w-full h-2 bg-purple-100 dark:bg-[#2a2a2a] rounded-full appearance-none cursor-pointer slider-subtle"
+                  />
+                  <div 
+                    className="absolute top-0 h-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full pointer-events-none transition-all duration-200"
+                    style={{ width: `${volume * 100}%` }}
+                  />
+                </div>
+                
+                <span className="text-xs text-purple-600 dark:text-purple-400 font-medium min-w-[2.5rem] text-right">
+                  {Math.round(volume * 100)}%
+                </span>
+              </div>
+              
+              <style jsx>{`
+                .slider-subtle::-webkit-slider-thumb {
+                  appearance: none;
+                  width: 16px;
+                  height: 16px;
+                  border-radius: 50%;
+                  background: linear-gradient(135deg, rgb(99, 102, 241), rgb(168, 85, 247));
+                  cursor: pointer;
+                  border: 2px solid white;
+                  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3);
+                  transition: all 0.2s ease-in-out;
+                }
+                .slider-subtle::-webkit-slider-thumb:hover {
+                  transform: scale(1.1);
+                  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+                }
+                .slider-subtle::-moz-range-thumb {
+                  width: 16px;
+                  height: 16px;
+                  border-radius: 50%;
+                  background: linear-gradient(135deg, rgb(99, 102, 241), rgb(168, 85, 247));
+                  cursor: pointer;
+                  border: 2px solid white;
+                  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3);
+                  transition: all 0.2s ease-in-out;
+                }
+                .dark .slider-subtle::-webkit-slider-thumb,
+                .dark .slider-subtle::-moz-range-thumb {
+                  border-color: rgb(31, 41, 55);
+                }
+              `}</style>
+            </div>
+          </div>
+        )}
+        
         {currentSound && visualizerActive && (
-          <div className="rounded-lg overflow-hidden h-20 mb-4 bg-gray-50 dark:bg-gray-900/50 shadow-inner">
+          <div className="rounded-xl overflow-hidden h-16 bg-gradient-to-r from-purple-100/50 to-indigo-100/50 dark:from-[#2a2a2a]/50 dark:to-[#1c1c1c] border border-purple-100/50 dark:border-gray-700">
             <canvas 
               ref={canvasRef}
-              className={`w-full h-full bg-gradient-to-br ${getActiveColor()} opacity-5`}
+              className={`w-full h-full bg-gradient-to-br ${getActiveColor()} opacity-10`}
             />
           </div>
         )}
         
-        <div className="flex flex-wrap gap-2 justify-center">
+        <div className="grid grid-cols-4 gap-2">
           {storeSounds.map((sound) => (
             <button
               key={sound.id}
               onClick={() => toggleSound(sound)}
-              className={`flex flex-col items-center justify-center rounded-lg transition-all w-16 h-16 ${
+              className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 ${
                 currentSound?.id === sound.id && isPlaying
-                  ? `bg-gradient-to-r ${soundColors[sound.id]} text-white shadow-md`
-                  : 'bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 shadow-sm'
+                  ? `bg-gradient-to-br ${soundColors[sound.id]} text-white shadow-lg shadow-purple-500/20`
+                  : 'bg-gray-50 dark:bg-[#2a2a2a] hover:bg-gray-100 dark:hover:bg-[#333333] border border-gray-100 dark:border-gray-700'
               }`}
             >
-              <span className="text-xl mb-1">{soundEmojis[sound.id] || '🔊'}</span>
-              <span className="text-[9px] max-w-full px-1 truncate">{sound.name}</span>
+              <span className="text-lg">{soundEmojis[sound.id] || '🔊'}</span>
+              <span className="text-[9px] font-medium mt-0.5 truncate w-full text-center">{sound.name}</span>
               {currentSound?.id === sound.id && isPlaying && (
                 <div className="flex space-x-0.5 mt-1">
                   <span className="w-0.5 h-2 bg-white rounded-full animate-sound-wave"></span>

@@ -2,7 +2,40 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { set as idbSet, get as idbGet } from 'idb-keyval';
+
+// Lazy import idb-keyval only on client side
+const isBrowser = typeof window !== 'undefined';
+
+// Safe IndexedDB operations that only run in browser
+const safeIdbGet = async (name: string): Promise<string | null> => {
+  if (!isBrowser) return null;
+  try {
+    const { get } = await import('idb-keyval');
+    const value = await get(name);
+    if (value === undefined || value === null || value === '') {
+      return null;
+    }
+    // If it's already a string, return it; otherwise stringify it
+    return typeof value === 'string' ? value : JSON.stringify(value);
+  } catch {
+    return null;
+  }
+};
+
+const safeIdbSet = async (name: string, value: unknown): Promise<void> => {
+  if (!isBrowser) return;
+  try {
+    const { set } = await import('idb-keyval');
+    // Store as string for consistency with JSON storage
+    if (value === null || value === undefined) {
+      await set(name, null);
+    } else {
+      await set(name, typeof value === 'string' ? value : JSON.stringify(value));
+    }
+  } catch (e) {
+    console.error('IndexedDB set error:', e);
+  }
+};
 
 export type MoodType = {
   emoji: string;
@@ -180,14 +213,11 @@ export const useJournalStore = create<JournalState>()(
     {
       name: 'journal-storage',
       storage: createJSONStorage(() => ({
-        getItem: async (name) => {
-          try { return await idbGet(name) ?? null; } catch { return null; }
-        },
-        setItem: async (name, value) => {
-          try { await idbSet(name, value); } catch (e) { console.error('Persist set error', e); }
-        },
-        removeItem: async (name) => { try { await idbSet(name, null); } catch {} },
+        getItem: safeIdbGet,
+        setItem: safeIdbSet,
+        removeItem: async (name) => { await safeIdbSet(name, null); },
       })),
+      skipHydration: !isBrowser,
       version: 1,
       onRehydrateStorage: () => {
         return (state, error) => {

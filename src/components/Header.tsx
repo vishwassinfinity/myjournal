@@ -19,7 +19,8 @@ const Header: React.FC<HeaderProps> = ({ toggleTheme, isDarkMode }) => {
     closeMenu();
   };
 
-  const onNewScript = () => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _onNewScript = () => {
     window.dispatchEvent(new CustomEvent('new-script'));
     // Smoothly scroll to main editor area
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -62,70 +63,77 @@ const Header: React.FC<HeaderProps> = ({ toggleTheme, isDarkMode }) => {
   ];
 
   return (
-    <header className="sticky top-0 z-50 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md shadow-sm border-b border-gray-200 dark:border-gray-800 transition-all duration-300">
-      <div className="container mx-auto px-4 py-3 flex justify-between items-center relative">
-        <div className="flex items-center space-x-3 z-20">
-          <div className="group">
+    <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/70 dark:bg-[#1c1c1c]/80 border-b border-white/20 dark:border-white/10 transition-all duration-500">
+      <div className="container mx-auto px-4 lg:px-6 py-4 flex justify-between items-center relative max-w-7xl">
+        <div className="flex items-center space-x-4 z-20">
+          <div className="relative group">
+            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity duration-300"></div>
             <Image 
               src="/images/Logo.png" 
               alt="Soul Scripts Logo" 
-              width={44}
-              height={44}
-              className="object-contain group-hover:scale-105 transition-transform duration-300 rounded-lg"
+              width={48}
+              height={48}
+              className="relative object-contain group-hover:scale-105 transition-transform duration-300 rounded-xl"
             />
           </div>
-          <h1 className="text-2xl font-bold text-journal-text-light dark:text-journal-text-dark text-shadow">
-            <span className="text-journal-primary">Soul</span> Scripts
-          </h1>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">
+              <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400 bg-clip-text text-transparent">Soul</span>
+              <span className="text-gray-800 dark:text-white ml-1">Scripts</span>
+            </h1>
+            <p className="text-xs text-gray-500 dark:text-gray-400 -mt-0.5">Your personal sanctuary</p>
+          </div>
         </div>
         
-        <div className="flex items-center space-x-4 z-20">
+        <div className="flex items-center space-x-3 z-20">
+          {/* Theme toggle */}
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-300 focus:outline-none group"
+            className="relative p-2.5 rounded-xl bg-white/50 dark:bg-[#2a2a2a]/80 hover:bg-white dark:hover:bg-[#333333] border border-gray-200/50 dark:border-white/10 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500/50 group"
             aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
           >
-            <div className="relative">
-              {isDarkMode ? (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-400 group-hover:rotate-45 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-              ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-700 group-hover:rotate-12 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 9.003 0 008.354-5.646z" />
-                </svg>
-              )}
-            </div>
+            {isDarkMode ? (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-400 group-hover:rotate-45 transition-transform duration-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-600 group-hover:rotate-12 transition-transform duration-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              </svg>
+            )}
           </button>
           
+          {/* Menu button */}
           <button 
             onClick={() => setShowMenu(!showMenu)}
-            className="p-2 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-300 relative"
+            className="relative p-2.5 rounded-xl bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 hover:from-indigo-500/20 hover:via-purple-500/20 hover:to-pink-500/20 border border-purple-200/50 dark:border-purple-800/50 transition-all duration-300 group"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 text-purple-600 dark:text-purple-400 transition-transform duration-300 ${showMenu ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
             
-            <span className="absolute top-0 right-0 h-2 w-2 bg-journal-accent rounded-full transform -translate-y-1 translate-x-1 animate-pulse"></span>
+            <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full animate-pulse"></span>
           </button>
         </div>
         
         {/* Dropdown Menu */}
         <div 
-          className={`absolute top-full right-4 mt-2 w-60 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 transition-all duration-300 z-10 transform origin-top-right ${
-            showMenu ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none'
+          className={`absolute top-full right-4 mt-3 w-64 backdrop-blur-xl bg-white/90 dark:bg-[#1c1c1c]/95 rounded-2xl shadow-xl shadow-purple-500/10 border border-white/20 dark:border-white/10 transition-all duration-300 z-10 transform origin-top-right overflow-hidden ${
+            showMenu ? 'scale-100 opacity-100 translate-y-0' : 'scale-95 opacity-0 -translate-y-2 pointer-events-none'
           }`}
         >
-          <div className="py-2">
+          <div className="p-2">
             {menuItems.map((item, index) => (
               <button 
                 key={index}
                 onClick={item.onClick}
-                className="flex items-center w-full px-4 py-2 text-sm text-journal-text-light dark:text-journal-text-dark hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="flex items-center w-full px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gradient-to-r hover:from-indigo-500/10 hover:via-purple-500/10 hover:to-pink-500/10 rounded-xl transition-all duration-200 group"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3 text-journal-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
-                </svg>
+                <div className="p-2 rounded-lg bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 group-hover:from-indigo-500/20 group-hover:via-purple-500/20 group-hover:to-pink-500/20 mr-3 transition-all duration-200">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
+                  </svg>
+                </div>
                 {item.label}
               </button>
             ))}

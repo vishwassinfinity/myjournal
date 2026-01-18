@@ -16,7 +16,7 @@ export function copyToClipboard(text: string): Promise<void> {
   return navigator.clipboard.writeText(text);
 }
 
-export function downloadJson(data: any, filename: string): void {
+export function downloadJson(data: unknown, filename: string): void {
   const json = JSON.stringify(data, null, 2);
   const blob = new Blob([json], { type: 'application/json' });
   const href = URL.createObjectURL(blob);
